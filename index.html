@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CODE FOR RANG | RASRANG'26 Challenge Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0809;
+    --surface:   #110d0f;
+    --border:    rgba(255,255,255,0.07);
+    --accent1:   #f97316;   /* orange */
+    --accent2:   #c026d3;   /* fuchsia */
+    --accent3:   #facc15;   /* yellow */
+    --text:      #f1f0ef;
+    --muted:     #7a6e6e;
+    --ps1-color: #f97316;
+    --ps2-color: #c026d3;
+    --active-ps: var(--ps1-color);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  /* ─── noise texture overlay ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 200px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ─── ambient glows ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -20%; left: -10%;
+    width: 60vw; height: 60vw;
+    background: radial-gradient(ellipse, rgba(249,115,22,0.12) 0%, transparent 65%);
+    pointer-events: none; z-index: 0;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+  @keyframes drift { to { transform: translate(10vw, 5vh); } }
+
+  .glow2 {
+    position: fixed;
+    bottom: -20%; right: -10%;
+    width: 60vw; height: 60vw;
+    background: radial-gradient(ellipse, rgba(192,38,211,0.12) 0%, transparent 65%);
+    pointer-events: none; z-index: 0;
+    animation: drift2 15s ease-in-out infinite alternate;
+  }
+  @keyframes drift2 { to { transform: translate(-8vw, -4vh); } }
+
+  /* ─── layout ─── */
+  .shell {
+    position: relative; z-index: 1;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    padding: 18px 22px 14px;
+    gap: 14px;
+    overflow: hidden;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo {
+    height: 54px;
+    width: auto;
+    border-radius: 8px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(249,115,22,0.4));
+  }
+
+  .event-label {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .by-ntt {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .event-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    background: linear-gradient(110deg, #f97316 0%, #facc15 40%, #c026d3 80%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+  @keyframes shimmer { to { background-position: 200% center; } }
+
+  .rasrang-badge {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rasrang-pill {
+    background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(192,38,211,0.15));
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--accent3);
+    text-transform: uppercase;
+  }
+
+  .event-meta-chips {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chip {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .chip span { color: var(--text); font-weight: 600; }
+
+  .fs-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .fs-btn:hover { background: rgba(249,115,22,0.2); color: var(--accent1); border-color: var(--accent1); }
+
+  /* ─── MAIN GRID ─── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 14px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ─── LEFT PANEL ─── */
+  .left {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  /* PS tabs */
+  .ps-tabs {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ps-tab {
+    flex: 1;
+    padding: 14px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.25s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ps-tab::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 3px;
+    border-radius: 2px 2px 0 0;
+    background: transparent;
+    transition: background 0.25s;
+  }
+  .ps-tab[data-ps="1"].active { color: var(--ps1-color); }
+  .ps-tab[data-ps="1"].active::after { background: var(--ps1-color); }
+  .ps-tab[data-ps="2"].active { color: var(--ps2-color); }
+  .ps-tab[data-ps="2"].active::after { background: var(--ps2-color); }
+  .ps-tab:hover:not(.active) { color: var(--text); }
+
+  .ps-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .ps-tab[data-ps="1"] .ps-dot { background: var(--ps1-color); }
+  .ps-tab[data-ps="2"] .ps-dot { background: var(--ps2-color); }
+
+  /* PS content area */
+  .ps-panels {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+  .ps-panels::-webkit-scrollbar { width: 4px; }
+  .ps-panels::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .ps-panel { display: none; }
+  .ps-panel.active { display: block; }
+
+  .ps-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .cat-orange { background: rgba(249,115,22,0.15); color: var(--ps1-color); border: 1px solid rgba(249,115,22,0.25); }
+  .cat-purple { background: rgba(192,38,211,0.15); color: var(--ps2-color); border: 1px solid rgba(192,38,211,0.25); }
+
+  .ps-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.1rem;
+    letter-spacing: 0.04em;
+    line-height: 1.05;
+    margin-bottom: 6px;
+  }
+  .ps-title.orange { color: var(--ps1-color); }
+  .ps-title.purple { color: var(--ps2-color); }
+
+  .ps-tagline {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  .ps-bg-text {
+    font-size: 0.88rem;
+    color: rgba(241,240,239,0.7);
+    line-height: 1.65;
+    margin-bottom: 10px;
+  }
+
+  .req-block {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+
+  .req-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .req-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .rn-orange { background: rgba(249,115,22,0.2); color: var(--ps1-color); }
+  .rn-purple { background: rgba(192,38,211,0.2); color: var(--ps2-color); }
+
+  .req-bullets {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .req-bullets li {
+    font-size: 0.82rem;
+    color: rgba(241,240,239,0.75);
+    line-height: 1.55;
+    padding: 3px 0 3px 16px;
+    position: relative;
+  }
+  .req-bullets li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .deliverables-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .deliv-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    color: rgba(241,240,239,0.75);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+
+  .deliv-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+  .judging-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .judge-pill {
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 130px;
+  }
+  .judge-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+  }
+  .jp-orange { background: rgba(249,115,22,0.12); color: var(--ps1-color); border: 1px solid rgba(249,115,22,0.2); }
+  .jp-purple { background: rgba(192,38,211,0.12); color: var(--ps2-color); border: 1px solid rgba(192,38,211,0.2); }
+  .jp-yellow { background: rgba(250,204,21,0.12); color: var(--accent3); border: 1px solid rgba(250,204,21,0.2); }
+  .jp-gray   { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  /* ─── RIGHT COLUMN ─── */
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  /* Timer */
+  .timer-panel {
+    padding: 22px 20px 18px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .timer-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .timer-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  #timer-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 4.8rem;
+    font-weight: 500;
+    text-align: center;
+    color: var(--accent3);
+    line-height: 1;
+    letter-spacing: -2px;
+    text-shadow: 0 0 40px rgba(250,204,21,0.35);
+    transition: color 0.4s, text-shadow 0.4s;
+  }
+
+  #timer-display.danger {
+    color: #ef4444;
+    text-shadow: 0 0 40px rgba(239,68,68,0.4);
+    animation: pulse-red 1s ease-in-out infinite;
+  }
+  @keyframes pulse-red { 50% { opacity: 0.6; } }
+
+  .timer-presets {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .t-preset {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .t-preset:hover { background: rgba(250,204,21,0.1); color: var(--accent3); border-color: rgba(250,204,21,0.3); }
+  .t-preset.active-preset { background: rgba(250,204,21,0.15); color: var(--accent3); border-color: rgba(250,204,21,0.4); }
+
+  .timer-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .t-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  #startBtn {
+    background: linear-gradient(135deg, #f97316, #facc15);
+    color: #0a0809;
+  }
+  #startBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(249,115,22,0.3); }
+
+  #pauseBtn {
+    background: rgba(255,255,255,0.07);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  #pauseBtn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+
+  .progress-bar-wrap {
+    margin-top: 12px;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f97316, #facc15);
+    border-radius: 2px;
+    transition: width 1s linear;
+    width: 100%;
+  }
+
+  /* Event info */
+  .info-panel {
+    padding: 18px 20px;
+    flex-shrink: 0;
+  }
+
+  .info-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .info-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.82rem;
+  }
+
+  .info-icon {
+    font-size: 1rem;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .info-row strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .info-row span {
+    color: var(--muted);
+  }
+
+  .register-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 11px;
+    background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(192,38,211,0.15));
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 10px;
+    color: var(--accent1);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .register-btn:hover {
+    background: linear-gradient(135deg, rgba(249,115,22,0.25), rgba(192,38,211,0.25));
+    border-color: rgba(249,115,22,0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(249,115,22,0.2);
+  }
+
+  /* Team size & rules card */
+  .rules-panel {
+    padding: 16px 20px;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+  }
+  .rules-panel::-webkit-scrollbar { width: 3px; }
+  .rules-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+  .rules-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .rule-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.8rem;
+    color: rgba(241,240,239,0.75);
+    line-height: 1.4;
+  }
+  .rule-item:last-child { border-bottom: none; }
+  .rule-item .r-icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+
+  .tagline-footer {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(249,115,22,0.08), rgba(192,38,211,0.08));
+    border: 1px solid rgba(249,115,22,0.15);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+  .tagline-footer span {
+    background: linear-gradient(90deg, #f97316, #facc15, #c026d3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ─── FULLSCREEN ─── */
+  :fullscreen { overflow: hidden; background: var(--bg); }
+  :fullscreen body { height: 100vh; overflow: hidden; }
+  :fullscreen .shell {
+    height: 100vh;
+    padding: 14px 18px 10px;
+  }
+  :fullscreen .main {
+    grid-template-columns: 1fr 280px;
+  }
+  :fullscreen .logo { height: 42px; }
+  :fullscreen .event-name { font-size: 2.2rem; }
+  :fullscreen .ps-title { font-size: 1.9rem; }
+  :fullscreen .ps-bg-text { font-size: 0.84rem; }
+  :fullscreen .req-bullets li { font-size: 0.79rem; }
+  :fullscreen .req-title { font-size: 0.76rem; }
+  :fullscreen #timer-display { font-size: 4.4rem; }
+  :fullscreen .chip { font-size: 0.67rem; }
+  :fullscreen .event-meta-chips { gap: 5px; }
+
+  /* responsive */
+  @media (max-width: 1100px) {
+    .main { grid-template-columns: 1fr; }
+    .right { display: none; }
+    body { overflow-y: auto; }
+    .shell { overflow: auto; height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow2"></div>
+
+<div class="shell">
+
+  <!-- ─── HEADER ─── -->
+  <header>
+    <div class="header-left">
+      <img src="image.png" alt="NTT Logo" class="logo" onerror="this.style.display='none'">
+      <div class="event-label">
+        <span class="by-ntt">Neuro Tech Titans × Rasrang'26</span>
+        <span class="event-name">CODE FOR RANG</span>
+      </div>
+    </div>
+
+    <div class="rasrang-badge">
+      <span class="rasrang-pill">🎨 Rasrang'26</span>
+    </div>
+
+    <div class="event-meta-chips">
+      <div class="chip">📍 <span>IST 312</span></div>
+      <div class="chip">🕒 <span>11:45 – 12:40</span></div>
+      <div class="chip">👥 Team: <span>2–4</span></div>
+      <div class="chip">📅 <span>Apr 8, 2026</span></div>
+    </div>
+
+    <button class="fs-btn" onclick="toggleFS()" title="Toggle Fullscreen">
+      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ─── MAIN ─── -->
+  <div class="main">
+
+    <!-- ─── LEFT: PROBLEM STATEMENTS ─── -->
+    <div class="left">
+      <div class="ps-tabs">
+        <button class="ps-tab active" data-ps="1" onclick="switchPS(1)">
+          <span class="ps-dot"></span>
+          PS 01 — HerdFinder
+        </button>
+        <button class="ps-tab" data-ps="2" onclick="switchPS(2)">
+          <span class="ps-dot"></span>
+          PS 02 — RasrangEats
+        </button>
+      </div>
+
+      <div class="ps-panels">
+
+        <!-- ─── PS 1 ─── -->
+        <div class="ps-panel active" id="ps1">
+          <div class="ps-category cat-orange">🗺️ &nbsp;Location · Web App · Intermediate</div>
+          <div class="ps-title orange">HerdFinder</div>
+          <p class="ps-tagline">Find your squad among thousands at Rasrang'26 — without losing your mind.</p>
+
+          <div class="section-label">Background</div>
+          <p class="ps-bg-text">
+            Rasrang'26 draws thousands of attendees across multiple event zones — stages, food courts, galleries, and arenas. Losing your group in the crowd is inevitable. Constant phone calls drain batteries, and GPS-sharing apps require accounts nobody wants to create at a festival. There has to be a better way.
+          </p>
+
+          <div class="section-label">Problem Statement</div>
+          <p class="ps-bg-text">
+            Build <strong style="color:var(--ps1-color)">HerdFinder</strong> — a real-time, mobile-friendly web app that lets Rasrang'26 attendees create a private squad, share their approximate zone location, and instantly broadcast a "Find Me" alert to teammates — all without login, GPS permission, or any external dependency.
+          </p>
+
+          <div class="section-label">Core Requirements</div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-orange">1</span>
+              Squad Creation & Joining
+            </div>
+            <ul class="req-bullets">
+              <li>User enters their name and creates a squad — gets a <strong>4–6 character invite code</strong>.</li>
+              <li>Other users enter the code to join the same squad. No login or account required.</li>
+              <li>Squad must persist across page refreshes (local storage / URL state acceptable).</li>
+            </ul>
+          </div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-orange">2</span>
+              Zone-Based Location Sharing
+            </div>
+            <ul class="req-bullets">
+              <li>Provide a predefined list of <strong>Rasrang'26 zones</strong>: Main Stage, Food Court, Art Gallery, Registration Desk, Parking, Game Zone, Backstage, Exit Gate.</li>
+              <li>User selects their current zone from a dropdown or tappable map grid. No GPS required.</li>
+              <li>Display each squad member's name, zone, and <strong>last-updated timestamp</strong>.</li>
+            </ul>
+          </div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-orange">3</span>
+              "Find Me" SOS Broadcast
+            </div>
+            <ul class="req-bullets">
+              <li>One-tap <strong>Find Me</strong> button sends a highlighted alert visible to all squad members.</li>
+              <li>Alert must visually stand out — full-screen flash, sound, or persistent banner.</li>
+              <li>Alert auto-clears after 60 seconds or when manually dismissed.</li>
+            </ul>
+          </div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-orange">4</span>
+              Festival-Grade UX Constraint
+            </div>
+            <ul class="req-bullets">
+              <li>Must be fully usable on a mobile browser in <strong>bright sunlight</strong>: high contrast, large tap targets (min 44px), minimal text input.</li>
+              <li>Core flow (join squad → set zone → broadcast) must complete in <strong>under 30 seconds</strong> for a new user.</li>
+            </ul>
+          </div>
+
+          <div class="section-label">Expected Deliverables</div>
+          <div class="deliverables-grid">
+            <div class="deliv-item"><span class="deliv-icon">🌐</span>Working web app (any stack — HTML/CSS/JS or framework)</div>
+            <div class="deliv-item"><span class="deliv-icon">📱</span>Mobile-responsive layout — test on phone before submitting</div>
+            <div class="deliv-item"><span class="deliv-icon">🔗</span>Hosted link (Vercel / Netlify) OR single runnable .html file</div>
+            <div class="deliv-item"><span class="deliv-icon">🗂️</span>Brief README: Features built + any limitations</div>
+          </div>
+
+          <div class="section-label">Bonus (Optional)</div>
+          <ul class="req-bullets" style="margin-top:4px;">
+            <li>Interactive Rasrang'26 zone mini-map with clickable areas.</li>
+            <li>Emoji reactions squad members can send each other (👋 😂 🔥).</li>
+            <li>Squad activity feed showing a log of zone updates and alerts.</li>
+          </ul>
+
+          <div class="section-label">Judging Criteria</div>
+          <div class="judging-row">
+            <div class="judge-pill jp-orange"><span class="judge-val">40%</span> Functionality</div>
+            <div class="judge-pill jp-yellow"><span class="judge-val">30%</span> UX & Design</div>
+            <div class="judge-pill jp-purple"><span class="judge-val">20%</span> Creativity</div>
+            <div class="judge-pill jp-gray"><span class="judge-val">10%</span> Code Quality</div>
+          </div>
+        </div>
+
+        <!-- ─── PS 2 ─── -->
+        <div class="ps-panel" id="ps2">
+          <div class="ps-category cat-purple">🍱 &nbsp;Marketplace · Web App · Intermediate–Advanced</div>
+          <div class="ps-title purple">RasrangEats</div>
+          <p class="ps-tagline">Order food from 20+ stalls. Skip the queue. Get your token. Eat.</p>
+
+          <div class="section-label">Background</div>
+          <p class="ps-bg-text">
+            Rasrang'26's food zone hosts 20+ stalls serving thousands of attendees over a single day. Long queues form within minutes of stalls opening — often with no menu visibility from a distance, no order tracking, and no way to know which stall still has stock. The chaos is real, and so is the hunger.
+          </p>
+
+          <div class="section-label">Problem Statement</div>
+          <p class="ps-bg-text">
+            Build <strong style="color:var(--ps2-color)">RasrangEats</strong> — a two-sided web platform where food stall vendors can digitally list their menu and manage incoming orders, and customers can browse all stalls, place pre-orders, and receive a queue token for pickup — all without payment gateways, logins, or backends.
+          </p>
+
+          <div class="section-label">Core Requirements — Vendor Side</div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-purple">V1</span>
+              Stall Registration
+            </div>
+            <ul class="req-bullets">
+              <li>Vendor enters: Stall Name, Cuisine Type (e.g., South Indian, Beverages, Snacks), Stall Number / Location.</li>
+              <li>After registration, vendor lands on their <strong>Stall Dashboard</strong>.</li>
+            </ul>
+          </div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-purple">V2</span>
+              Menu Management
+            </div>
+            <ul class="req-bullets">
+              <li>Add / edit / remove menu items: Item Name, Price (₹), Availability toggle (<strong>In Stock / Sold Out</strong>).</li>
+              <li>Sold-out items must be clearly visible to customers but non-orderable.</li>
+            </ul>
+          </div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-purple">V3</span>
+              Live Order Dashboard
+            </div>
+            <ul class="req-bullets">
+              <li>Vendor sees incoming orders in a <strong>FIFO queue</strong> with customer name, items ordered, and order timestamp.</li>
+              <li>Vendor can move each order through: <strong>Pending → Preparing → Ready for Pickup</strong>.</li>
+              <li>Completed orders collapse to a history log.</li>
+            </ul>
+          </div>
+
+          <div class="section-label">Core Requirements — Customer Side</div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-purple">C1</span>
+              Stall Browser
+            </div>
+            <ul class="req-bullets">
+              <li>Grid/list view of all registered stalls with cuisine type and open/busy status.</li>
+              <li>Filter by cuisine type or "In Stock" availability.</li>
+              <li>Tap a stall → see full menu with prices and stock status.</li>
+            </ul>
+          </div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-purple">C2</span>
+              Cart & Pre-Order
+            </div>
+            <ul class="req-bullets">
+              <li>Add items from <strong>one stall at a time</strong> to cart (cross-stall ordering not required).</li>
+              <li>Checkout: enter Name + Phone Number. No login required. Cash-on-pickup model.</li>
+              <li>On submit — generate a unique <strong>order token</strong> (e.g., <code style="color:var(--ps2-color);font-family:'DM Mono',monospace">#FD042</code>).</li>
+            </ul>
+          </div>
+
+          <div class="req-block">
+            <div class="req-title">
+              <span class="req-num rn-purple">C3</span>
+              Token & Wait Time
+            </div>
+            <ul class="req-bullets">
+              <li>Post-order screen shows: Order Token, Items Ordered, Stall Name & Location.</li>
+              <li>Display <strong>estimated wait time</strong> — calculated as (pending orders ahead × 2 minutes).</li>
+              <li>Customer can re-enter token to check live status: <strong>Pending / Preparing / Ready ✅</strong>.</li>
+            </ul>
+          </div>
+
+          <div class="section-label">Expected Deliverables</div>
+          <div class="deliverables-grid">
+            <div class="deliv-item"><span class="deliv-icon">🌐</span>Working web app (any stack — HTML/CSS/JS or framework)</div>
+            <div class="deliv-item"><span class="deliv-icon">🔀</span>Both Vendor & Customer views accessible from same app (toggle/switch in UI)</div>
+            <div class="deliv-item"><span class="deliv-icon">💾</span>Local storage or in-memory state acceptable — no backend required</div>
+            <div class="deliv-item"><span class="deliv-icon">🔗</span>Hosted link (Vercel / Netlify) OR single runnable .html file</div>
+          </div>
+
+          <div class="section-label">Bonus (Optional)</div>
+          <ul class="req-bullets" style="margin-top:4px;">
+            <li>Printable QR code per stall that customers can scan to jump directly to that stall's menu.</li>
+            <li>Sales analytics for vendor: total orders, revenue, best-selling item.</li>
+            <li>Dark / festive UI theme inspired by Rasrang'26 branding.</li>
+          </ul>
+
+          <div class="section-label">Judging Criteria</div>
+          <div class="judging-row">
+            <div class="judge-pill jp-purple"><span class="judge-val">40%</span> Functionality</div>
+            <div class="judge-pill jp-yellow"><span class="judge-val">30%</span> UX & Design</div>
+            <div class="judge-pill jp-orange"><span class="judge-val">20%</span> Completeness</div>
+            <div class="judge-pill jp-gray"><span class="judge-val">10%</span> Code Quality</div>
+          </div>
+        </div>
+
+      </div><!-- /ps-panels -->
+    </div><!-- /left -->
+
+    <!-- ─── RIGHT COLUMN ─── -->
+    <div class="right">
+
+      <!-- Timer -->
+      <div class="panel timer-panel">
+        <div class="timer-label">⏱ Competition Timer</div>
+        <div id="timer-display">55:00</div>
+        <div class="timer-presets">
+          <button class="t-preset active-preset" onclick="setTimer(55, this)">55m</button>
+          <button class="t-preset" onclick="setTimer(45, this)">45m</button>
+          <button class="t-preset" onclick="setTimer(30, this)">30m</button>
+          <button class="t-preset" onclick="setTimer(15, this)">15m</button>
+        </div>
+        <div class="timer-actions">
+          <button class="t-btn" id="startBtn" onclick="toggleTimer()">▶ START</button>
+          <button class="t-btn" id="pauseBtn" onclick="pauseTimer()">⏸ PAUSE</button>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <!-- Event Info -->
+      <div class="panel info-panel">
+        <div class="info-title">Event Details</div>
+        <div class="info-rows">
+          <div class="info-row"><span class="info-icon">📍</span> <span>Venue: </span><strong>&nbsp;IST 312</strong></div>
+          <div class="info-row"><span class="info-icon">🕒</span> <span>Time: </span><strong>&nbsp;11:45 AM – 12:40 PM</strong></div>
+          <div class="info-row"><span class="info-icon">📅</span> <span>Date: </span><strong>&nbsp;April 8, 2026</strong></div>
+          <div class="info-row"><span class="info-icon">👥</span> <span>Team: </span><strong>&nbsp;2 – 4 members</strong></div>
+          <div class="info-row"><span class="info-icon">💻</span> <span>BYOD — Bring Your Own Device</span></div>
+          <div class="info-row"><span class="info-icon">🏆</span> <span>E-Certs + Special Recognition</span></div>
+        </div>
+        <a class="register-btn" href="https://forms.gle/qMA7vGuZuDAbT2wy5" target="_blank">
+          📝 Register Now →
+        </a>
+      </div>
+
+      <!-- Rules -->
+      <div class="panel rules-panel">
+        <div class="rules-title">Rules & Format</div>
+
+        <div class="rule-item"><span class="r-icon">🎯</span><span>Choose <strong>one</strong> problem statement — PS 01 or PS 02.</span></div>
+        <div class="rule-item"><span class="r-icon">⏱</span><span>55-minute build sprint. Judging happens immediately after time is up.</span></div>
+        <div class="rule-item"><span class="r-icon">🌐</span><span>Any web technology allowed — HTML, React, Vue, Vanilla JS, etc.</span></div>
+        <div class="rule-item"><span class="r-icon">🤝</span><span>AI tools like Claude are <strong>allowed</strong> and encouraged. Vibe code freely.</span></div>
+        <div class="rule-item"><span class="r-icon">🔗</span><span>Submit a hosted link (Vercel/Netlify) or a working .html file.</span></div>
+        <div class="rule-item"><span class="r-icon">🚫</span><span>No pre-built projects — all code must be written during the session.</span></div>
+        <div class="rule-item"><span class="r-icon">📊</span><span>Judges evaluate all 4 criteria — partial implementations score too!</span></div>
+
+        <div class="tagline-footer">
+          <span>⚡ Code · Compete · Conquer</span>
+        </div>
+      </div>
+
+    </div><!-- /right -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+  // ─── PS SWITCHER ───
+  function switchPS(n) {
+    document.querySelectorAll('.ps-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ps-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.ps-tab[data-ps="${n}"]`).classList.add('active');
+    document.getElementById(`ps${n}`).classList.add('active');
+    document.getElementById(`ps${n}`).scrollTop = 0;
+    document.querySelector('.ps-panels').scrollTop = 0;
+  }
+
+  // ─── TIMER ───
+  let totalSeconds = 55 * 60;
+  let secondsLeft  = totalSeconds;
+  let running      = false;
+  let interval     = null;
+  const disp       = document.getElementById('timer-display');
+  const bar        = document.getElementById('progressBar');
+  const startBtn   = document.getElementById('startBtn');
+
+  function render() {
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    disp.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    const pct = totalSeconds > 0 ? (secondsLeft / totalSeconds) * 100 : 0;
+    bar.style.width = pct + '%';
+    disp.classList.toggle('danger', secondsLeft <= 300 && secondsLeft > 0);
+  }
+
+  function setTimer(mins, el) {
+    clearInterval(interval);
+    running = false;
+    totalSeconds = mins * 60;
+    secondsLeft  = totalSeconds;
+    startBtn.textContent = '▶ START';
+    document.querySelectorAll('.t-preset').forEach(b => b.classList.remove('active-preset'));
+    if (el) el.classList.add('active-preset');
+    render();
+  }
+
+  function toggleTimer() {
+    if (running) return;
+    if (secondsLeft <= 0) return;
+    running = true;
+    startBtn.textContent = '● RUNNING';
+    interval = setInterval(() => {
+      secondsLeft--;
+      render();
+      if (secondsLeft <= 0) {
+        clearInterval(interval);
+        running = false;
+        startBtn.textContent = '▶ START';
+        disp.classList.add('danger');
+        setTimeout(() => alert("⏱ TIME'S UP! Pens down — submit your work!"), 100);
+      }
+    }, 1000);
+  }
+
+  function pauseTimer() {
+    if (!running) return;
+    clearInterval(interval);
+    running = false;
+    startBtn.textContent = '▶ RESUME';
+  }
+
+  // ─── FULLSCREEN ───
+  function toggleFS() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  // init
+  render();
+</script>
+</body>
+</html>
